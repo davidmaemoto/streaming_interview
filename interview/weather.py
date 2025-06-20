@@ -35,5 +35,13 @@ def process_events(events: Iterable[dict[str, Any]]) -> Generator[dict[str, Any]
                         'asOf': latest_timestamp,
                         'stations': stations_data.copy()
                     }
+            elif event.get('command') == 'reset':
+                if latest_timestamp is not None:
+                    yield {
+                        'type': 'reset',
+                        'asOf': latest_timestamp
+                    }
+                stations_data.clear()
+                latest_timestamp = None
             continue
     yield from ()

@@ -51,3 +51,24 @@ def test_snapshot_output():
         "A": {"high": 20.0, "low": 10.0},
         "B": {"high": 15.0, "low": 15.0},
     }
+
+def test_reset_output():
+    events = [
+        {"type": "sample", "stationName": "A", "timestamp": 1, "temperature": 10.0},
+        {"type": "control", "command": "reset"},
+    ]
+    result = list(weather.process_events(events))
+    assert len(result) == 1
+    reset = result[0]
+    assert reset["type"] == "reset"
+    assert reset["asOf"] == 1
+
+def test_reset_clears_data():
+    events = [
+        {"type": "sample", "stationName": "A", "timestamp": 1, "temperature": 10.0},
+        {"type": "control", "command": "reset"},
+        {"type": "control", "command": "snapshot"},
+    ]
+    result = list(weather.process_events(events))
+    assert len(result) == 1  # only reset output, no snapshot after reset
+    assert result[0]["type"] == "reset"
