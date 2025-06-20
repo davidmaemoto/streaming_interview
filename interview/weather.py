@@ -28,5 +28,12 @@ def process_events(events: Iterable[dict[str, Any]]) -> Generator[dict[str, Any]
                 stations_data[station]['low'] = min(stations_data[station]['low'], temp)
             continue
         if event_type == 'control':
-            continue # continue for now
+            if event.get('command') == 'snapshot':
+                if latest_timestamp is not None:
+                    yield {
+                        'type': 'snapshot',
+                        'asOf': latest_timestamp,
+                        'stations': stations_data.copy()
+                    }
+            continue
     yield from ()

@@ -34,3 +34,20 @@ def test_sample_missing_fields():
     for event in events:
         with pytest.raises(ValueError, match="Please verify input. Sample must contain stationName, timestamp, and temperature."):
             list(weather.process_events([event]))
+
+def test_snapshot_output():
+    events = [
+        {"type": "sample", "stationName": "A", "timestamp": 1, "temperature": 10.0},
+        {"type": "sample", "stationName": "A", "timestamp": 2, "temperature": 20.0},
+        {"type": "sample", "stationName": "B", "timestamp": 3, "temperature": 15.0},
+        {"type": "control", "command": "snapshot"},
+    ]
+    result = list(weather.process_events(events))
+    assert len(result) == 1
+    snap = result[0]
+    assert snap["type"] == "snapshot"
+    assert snap["asOf"] == 3
+    assert snap["stations"] == {
+        "A": {"high": 20.0, "low": 10.0},
+        "B": {"high": 15.0, "low": 15.0},
+    }
