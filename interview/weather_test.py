@@ -140,15 +140,15 @@ def test_generator_behavior():
         {"type": "control", "command": "snapshot"},
     ]
     generator = weather.process_events(events)
-    
+
     first_result = next(generator)
     assert first_result["type"] == "snapshot"
     assert first_result["stations"]["A"]["high"] == 10.0
-    
+
     second_result = next(generator)
     assert second_result["type"] == "snapshot"
     assert second_result["stations"]["A"]["high"] == 20.0
-    
+
     with pytest.raises(StopIteration):
         next(generator)
 
