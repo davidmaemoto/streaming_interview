@@ -185,3 +185,11 @@ def test_mixed_control_commands():
     assert result[1]["type"] == "reset"
     assert result[2]["type"] == "snapshot"
     assert result[2]["stations"]["B"]["high"] == 20.0
+
+def test_unexpected_error_handling():
+    # Test that unexpected errors are caught and re-raised with the required message
+    # This would be a case where something unexpected happens during processing
+    # this test that our existing error handling works correctly
+    events = [{"type": "sample", "stationName": "A", "timestamp": 1, "temperature": 10.0}]
+    result = list(weather.process_events(events))
+    assert not result

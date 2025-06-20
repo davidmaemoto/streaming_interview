@@ -6,53 +6,58 @@ def process_events(events: Iterable[dict[str, Any]]) -> Generator[dict[str, Any]
     latest_timestamp: Optional[int] = None
 
     for event in events:
-        if not isinstance(event, dict) or 'type' not in event:
-            raise ValueError("Please verify input. Event must be a dictionary with 'type' field.")
-        event_type = event.get('type')
-        if event_type not in ['sample', 'control']:
-            raise ValueError(f"Please verify input. Unknown message type: {event_type}")
+        try:
+            if not isinstance(event, dict) or 'type' not in event:
+                raise ValueError("Please verify input. Event must be a dictionary with 'type' field.")
+            event_type = event.get('type')
+            if event_type not in ['sample', 'control']:
+                raise ValueError(f"Please verify input. Unknown message type: {event_type}")
 
-        if event_type == 'sample':
-            for key in ['stationName', 'timestamp', 'temperature']:
-                if key not in event:
-                    raise ValueError("Please verify input. Sample must contain stationName, timestamp, and temperature.")
-            station = event['stationName']
-            temp = event['temperature']
-            ts = event['timestamp']
-            if not isinstance(station, str):
-                raise ValueError("Please verify input. stationName must be a string.")
-            if not isinstance(ts, int):
-                raise ValueError("Please verify input. timestamp must be an integer.")
-            if not isinstance(temp, (int, float)):
-                raise ValueError("Please verify input. temperature must be a number.")
-            if latest_timestamp is None or ts > latest_timestamp:
-                latest_timestamp = ts
-            if station not in stations_data:
-                stations_data[station] = {'high': temp, 'low': temp}
-            else:
-                stations_data[station]['high'] = max(stations_data[station]['high'], temp)
-                stations_data[station]['low'] = min(stations_data[station]['low'], temp)
-            continue
-        if event_type == 'control':
-            if 'command' not in event:
-                raise ValueError("Please verify input. Control message must contain 'command' field.")
-            command = event['command']
-            if command == 'snapshot':
-                if latest_timestamp is not None:
-                    yield {
-                        'type': 'snapshot',
-                        'asOf': latest_timestamp,
-                        'stations': stations_data.copy()
-                    }
-            elif command == 'reset':
-                if latest_timestamp is not None:
-                    yield {
-                        'type': 'reset',
-                        'asOf': latest_timestamp
-                    }
-                stations_data.clear()
-                latest_timestamp = None
-            else:
-                raise ValueError(f"Please verify input. Unknown control command: {command}")
-            continue
+            if event_type == 'sample':
+                for key in ['stationName', 'timestamp', 'temperature']:
+                    if key not in event:
+                        raise ValueError("Please verify input. Sample must contain stationName, timestamp, and temperature.")
+                station = event['stationName']
+                temp = event['temperature']
+                ts = event['timestamp']
+                if not isinstance(station, str):
+                    raise ValueError("Please verify input. stationName must be a string.")
+                if not isinstance(ts, int):
+                    raise ValueError("Please verify input. timestamp must be an integer.")
+                if not isinstance(temp, (int, float)):
+                    raise ValueError("Please verify input. temperature must be a number.")
+                if latest_timestamp is None or ts > latest_timestamp:
+                    latest_timestamp = ts
+                if station not in stations_data:
+                    stations_data[station] = {'high': temp, 'low': temp}
+                else:
+                    stations_data[station]['high'] = max(stations_data[station]['high'], temp)
+                    stations_data[station]['low'] = min(stations_data[station]['low'], temp)
+                continue
+            if event_type == 'control':
+                if 'command' not in event:
+                    raise ValueError("Please verify input. Control message must contain 'command' field.")
+                command = event['command']
+                if command == 'snapshot':
+                    if latest_timestamp is not None:
+                        yield {
+                            'type': 'snapshot',
+                            'asOf': latest_timestamp,
+                            'stations': stations_data.copy()
+                        }
+                elif command == 'reset':
+                    if latest_timestamp is not None:
+                        yield {
+                            'type': 'reset',
+                            'asOf': latest_timestamp
+                        }
+                    stations_data.clear()
+                    latest_timestamp = None
+                else:
+                    raise ValueError(f"Please verify input. Unknown control command: {command}")
+                continue
+        except ValueError as e:
+            raise ValueError(str(e))
+        except Exception as e:
+            raise ValueError(f"Please verify input. Unexpected error: {str(e)}")
     yield from ()
