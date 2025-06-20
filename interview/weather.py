@@ -19,6 +19,12 @@ def process_events(events: Iterable[dict[str, Any]]) -> Generator[dict[str, Any]
             station = event['stationName']
             temp = event['temperature']
             ts = event['timestamp']
+            if not isinstance(station, str):
+                raise ValueError("Please verify input. stationName must be a string.")
+            if not isinstance(ts, int):
+                raise ValueError("Please verify input. timestamp must be an integer.")
+            if not isinstance(temp, (int, float)):
+                raise ValueError("Please verify input. temperature must be a number.")
             if latest_timestamp is None or ts > latest_timestamp:
                 latest_timestamp = ts
             if station not in stations_data:
