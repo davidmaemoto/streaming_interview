@@ -13,6 +13,9 @@ def process_events(events: Iterable[dict[str, Any]]) -> Generator[dict[str, Any]
             raise ValueError(f"Please verify input. Unknown message type: {event_type}")
 
         if event_type == 'sample':
+            for key in ['stationName', 'timestamp', 'temperature']:
+                if key not in event:
+                    raise ValueError("Please verify input. Sample must contain stationName, timestamp, and temperature.")
             station = event['stationName']
             temp = event['temperature']
             ts = event['timestamp']
@@ -23,4 +26,7 @@ def process_events(events: Iterable[dict[str, Any]]) -> Generator[dict[str, Any]
             else:
                 stations_data[station]['high'] = max(stations_data[station]['high'], temp)
                 stations_data[station]['low'] = min(stations_data[station]['low'], temp)
-        # control messages: do nothing for now
+            continue
+        if event_type == 'control':
+            continue # continue for now
+    yield from ()

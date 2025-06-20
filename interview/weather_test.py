@@ -2,9 +2,9 @@ import pytest
 from . import weather
 
 def test_basic_message_validation():
-    events = [{"type": "sample", "data": "test"}]
+    events = [{"type": "sample", "stationName": "A", "timestamp": 1, "temperature": 10.0}]
     result = list(weather.process_events(events))
-    assert result == events
+    assert result == []
 
 def test_unknown_message_type():
     events = [{"type": "unknown", "data": "test"}]
@@ -24,3 +24,13 @@ def test_samples_yield_nothing():
     ]
     result = list(weather.process_events(events))
     assert result == []
+
+def test_sample_missing_fields():
+    events = [
+        {"type": "sample", "stationName": "A", "timestamp": 1},
+        {"type": "sample", "stationName": "A", "temperature": 10.0},
+        {"type": "sample", "timestamp": 1, "temperature": 10.0},
+    ]
+    for event in events:
+        with pytest.raises(ValueError, match="Please verify input. Sample must contain stationName, timestamp, and temperature."):
+            list(weather.process_events([event]))
