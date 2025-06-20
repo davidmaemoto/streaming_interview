@@ -28,14 +28,17 @@ def process_events(events: Iterable[dict[str, Any]]) -> Generator[dict[str, Any]
                 stations_data[station]['low'] = min(stations_data[station]['low'], temp)
             continue
         if event_type == 'control':
-            if event.get('command') == 'snapshot':
+            if 'command' not in event:
+                raise ValueError("Please verify input. Control message must contain 'command' field.")
+            command = event['command']
+            if command == 'snapshot':
                 if latest_timestamp is not None:
                     yield {
                         'type': 'snapshot',
                         'asOf': latest_timestamp,
                         'stations': stations_data.copy()
                     }
-            elif event.get('command') == 'reset':
+            elif command == 'reset':
                 if latest_timestamp is not None:
                     yield {
                         'type': 'reset',
@@ -43,5 +46,7 @@ def process_events(events: Iterable[dict[str, Any]]) -> Generator[dict[str, Any]
                     }
                 stations_data.clear()
                 latest_timestamp = None
+            else:
+                raise ValueError(f"Please verify input. Unknown control command: {command}")
             continue
     yield from ()

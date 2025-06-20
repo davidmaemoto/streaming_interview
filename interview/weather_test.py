@@ -80,7 +80,7 @@ def test_unknown_control_command():
 
 def test_control_missing_command():
     events = [{"type": "control"}]
-    with pytest.raises(ValueError, match="Please verify input. Unknown control command: None"):
+    with pytest.raises(ValueError, match="Please verify input. Control message must contain 'command' field."):
         list(weather.process_events(events))
 
 def test_snapshot_without_data():
