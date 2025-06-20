@@ -67,6 +67,37 @@ def generate_reset_output(latest_timestamp: int) -> dict[str, Any]:
     }
 
 
+def handle_sample_event(
+    event: dict[str, Any],
+    stations_data: Dict[str, Dict[str, float]],
+    latest_timestamp: Optional[int]
+) -> int:
+    """Handle sample event and return updated latest timestamp."""
+    station, ts, temp = validate_sample_event(event)
+    if latest_timestamp is None or ts > latest_timestamp:
+        latest_timestamp = ts
+    update_station_data(stations_data, station, temp)
+    return latest_timestamp
+
+
+def handle_control_event(
+    event: dict[str, Any],
+    stations_data: Dict[str, Dict[str, float]],
+    latest_timestamp: Optional[int]
+) -> Tuple[Optional[dict[str, Any]], Optional[int]]:
+    """Handle control event and return (output, new_latest_timestamp)."""
+    command = validate_control_event(event)
+    if command == 'snapshot':
+        if latest_timestamp is not None:
+            return generate_snapshot_output(stations_data, latest_timestamp), latest_timestamp
+        return None, latest_timestamp
+    if command == 'reset':
+        if latest_timestamp is not None:
+            return generate_reset_output(latest_timestamp), None
+        return None, None
+    raise ValueError(f"Please verify input. Unknown control command: {command}")
+
+
 def process_events(events: Iterable[dict[str, Any]]) -> Generator[dict[str, Any], None, None]:
     stations_data: Dict[str, Dict[str, float]] = {}
     latest_timestamp: Optional[int] = None
@@ -83,27 +114,16 @@ def process_events(events: Iterable[dict[str, Any]]) -> Generator[dict[str, Any]
                 raise ValueError(f"Please verify input. Unknown message type: {event_type}")
 
             if event_type == 'sample':
-                station, ts, temp = validate_sample_event(event)
-                if latest_timestamp is None or ts > latest_timestamp:
-                    latest_timestamp = ts
-                update_station_data(stations_data, station, temp)
-                continue
-
-            if event_type == 'control':
-                command = validate_control_event(event)
-                if command == 'snapshot':
-                    if latest_timestamp is not None:
-                        yield generate_snapshot_output(stations_data, latest_timestamp)
-                elif command == 'reset':
-                    if latest_timestamp is not None:
-                        yield generate_reset_output(latest_timestamp)
+                latest_timestamp = handle_sample_event(event, stations_data, latest_timestamp)
+            elif event_type == 'control':
+                output, new_timestamp = handle_control_event(event, stations_data, latest_timestamp)
+                if output is not None:
+                    yield output
+                if new_timestamp is None:  # Reset occurred
                     stations_data.clear()
                     latest_timestamp = None
                 else:
-                    raise ValueError(
-                        f"Please verify input. Unknown control command: {command}"
-                    )
-                continue
+                    latest_timestamp = new_timestamp
 
         except ValueError as e:
             raise ValueError(str(e)) from e

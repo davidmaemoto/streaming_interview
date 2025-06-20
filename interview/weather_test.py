@@ -13,7 +13,8 @@ def test_unknown_message_type():
 
 def test_missing_type_field():
     events = [{"data": "test"}]
-    with pytest.raises(ValueError, match="Please verify input. Event must be a dictionary with 'type' field."):
+    with pytest.raises(ValueError,
+        match="Please verify input. Event must be a dictionary with 'type' field."):
         list(weather.process_events(events))
 
 def test_samples_yield_nothing():
@@ -32,7 +33,8 @@ def test_sample_missing_fields():
         {"type": "sample", "timestamp": 1, "temperature": 10.0},
     ]
     for event in events:
-        with pytest.raises(ValueError, match="Please verify input. Sample must contain stationName, timestamp, and temperature."):
+        with pytest.raises(ValueError,
+        match="Please verify input. Sample must contain stationName, timestamp, and temperature."):
             list(weather.process_events([event]))
 
 def test_snapshot_output():
@@ -80,7 +82,8 @@ def test_unknown_control_command():
 
 def test_control_missing_command():
     events = [{"type": "control"}]
-    with pytest.raises(ValueError, match="Please verify input. Control message must contain 'command' field."):
+    with pytest.raises(ValueError,
+        match="Please verify input. Control message must contain 'command' field."):
         list(weather.process_events(events))
 
 def test_snapshot_without_data():
