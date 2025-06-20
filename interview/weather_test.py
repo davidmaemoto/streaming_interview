@@ -1,9 +1,6 @@
 import pytest
 from . import weather
 
-def test_replace_me():
-    assert [{}] == list(weather.process_events([{}]))
-
 def test_basic_message_validation():
     events = [{"type": "sample", "data": "test"}]
     result = list(weather.process_events(events))
