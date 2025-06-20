@@ -153,18 +153,18 @@ def test_generator_behavior():
         next(generator)
 
 def test_data_types_validation():
-    events = [
-        {"type": "sample", "stationName": 123, "timestamp": 1, "temperature": 10.0},  # stationName should be string
-        {"type": "sample", "stationName": "A", "timestamp": "not_a_number", "temperature": 10.0},  # timestamp should be int
-        {"type": "sample", "stationName": "A", "timestamp": 1, "temperature": "not_a_number"},  # temperature should be number
-    ]
-    # These should fail but currently don't - we'll add type validation in a future step
-    # For now, just test that they don't crash
-    for event in events:
-        try:
-            list(weather.process_events([event]))
-        except (KeyError, TypeError):
-            pass  # expected for now
+    # stationName should be string
+    event = {"type": "sample", "stationName": 123, "timestamp": 1, "temperature": 10.0}
+    with pytest.raises(ValueError, match="Please verify input. stationName must be a string."):
+        list(weather.process_events([event]))
+    # timestamp should be int
+    event = {"type": "sample", "stationName": "A", "timestamp": "not_a_number", "temperature": 10.0}
+    with pytest.raises(ValueError, match="Please verify input. timestamp must be an integer."):
+        list(weather.process_events([event]))
+    # temperature should be number
+    event = {"type": "sample", "stationName": "A", "timestamp": 1, "temperature": "not_a_number"}
+    with pytest.raises(ValueError, match="Please verify input. temperature must be a number."):
+        list(weather.process_events([event]))
 
 def test_empty_input():
     events = []
